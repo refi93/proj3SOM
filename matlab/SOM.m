@@ -4,6 +4,7 @@ load iris %SOM_data
 %aby sme triedu nepouzivali pri treningu
 data = data(1:4,:);
 
+csvwrite('iris.csv',data');
 [n_input,n_data] = size(data);
 
 neurons_r = 10;
@@ -21,6 +22,7 @@ for ep=1:ep_max
    data = data(:,randperm(n_data));
    %update lambda
    lambda=lambda_initial*(lambda_final/lambda_initial)^(ep/ep_max);
+   lambda
    avg_win_score = 0;
    for j=1:n_data
       x = data(:, j);
@@ -30,7 +32,6 @@ for ep=1:ep_max
       for r=1:neurons_r
          for c=1:neurons_c
             score = norm(x'- reshape(w(r,c,:), 1, n_input));
-            score
             if (score < winner_score)
                winner_r = r;
                winner_c = c;
@@ -43,7 +44,7 @@ for ep=1:ep_max
       i_star = [winner_r, winner_c];
       for r=1:neurons_r
          for c=1:neurons_c
-            i = [r,c]; 
+            i = [r,c];
             %size(i)
             %size(i_star)
             delta_w = alpha * h(i_star, i, lambda)*(reshape(x, 1, 1, n_input) - w(r,c,:));

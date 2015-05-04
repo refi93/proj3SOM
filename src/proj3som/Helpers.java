@@ -385,7 +385,6 @@ public class Helpers {
     
     static Double gaussianNeighborhood (ArrayList<Double> v1, ArrayList<Double> v2, double lambda) {
         ArrayList dif = vectorOperation(v2, v1, '-');
-        
         double normDif = vectorNorm(dif);
         double ret = Math.pow(Math.E, -(normDif * normDif) / (lambda * lambda)  ); 
         return ret;
@@ -393,12 +392,24 @@ public class Helpers {
     
     static Matrix normalizeData (Matrix data, int numCols) {
         Matrix ret = numberMatrix(data.numRows(), data.numCols(), 0);
-        ArrayList<Double> averages = new ArrayList<>();
-        for (int c = 0; c < data.numCols(); c++) {
+        for (int c = 0; c < numCols; c++) {
+            double avg = 0.0;
             for (int r = 0; r < data.numRows(); r++) {
-                
+                avg += data.get(r).get(c);
+            }
+            avg = avg / data.numRows();
+            
+            double stdev = 0;
+            for (int r = 0; r < data.numRows(); r++) {
+                stdev += (data.get(r).get(c) - avg) * (data.get(r).get(c) - avg);
+            }
+            stdev = Math.sqrt(stdev / data.numRows());
+            
+            for (int r = 0; r < data.numRows(); r++) {
+                ret.get(r).set(c, (data.get(r).get(c) - avg) / stdev);
             }
         }
+        return ret;
     }
 }
 

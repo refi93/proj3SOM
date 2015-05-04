@@ -5,8 +5,10 @@
  */
 package proj3som;
 
+import java.io.BufferedReader;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Scanner;
@@ -31,18 +33,35 @@ public class Proj3SOM {
         return ret;
     }
     
+    public static Matrix loadCsvData(String csvFile) throws FileNotFoundException, IOException{
+        BufferedReader br = new BufferedReader(new FileReader(csvFile));
+        String line;
+        Matrix ret = new Matrix();
+        
+        while ((line = br.readLine()) != null) {
+            ArrayList<Double> pom = new ArrayList<>();
+            String[] inputs = line.split(",");
+            for(String s : inputs){
+                pom.add(Double.parseDouble(s)); 
+            }
+            ret.addRow(pom);
+        }
+        
+        return ret;
+    }
+    
     /**
      * @param args the command line arguments
      */
-    public static void main(String[] args) throws FileNotFoundException {
-        int neuronRows = 10;
-        int neuronCols = 10;
+    public static void main(String[] args) throws FileNotFoundException, IOException {
+        int neuronRows = 20;
+        int neuronCols = 20;
         int dataDimensionsCount = 4;
         
-        double alpha = 0.05;
+        double alpha = 0.12;
         double lambdaInitial = 15;
-        double lambdaFinal = 1;
-        int epochCount = 100;
+        double lambdaFinal = 0.0000001;
+        int epochCount = 1000;
         
         // inicializujeme vahove matice
         ArrayList<Matrix> weightMatrices = new ArrayList<>();
@@ -52,16 +71,20 @@ public class Proj3SOM {
         }
         
         Matrix data = loadData("iris.dat");
-        
+        //Matrix data = loadCsvData("iris.csv");
+        //data = Helpers.normalizeData(data, dataDimensionsCount);
         // trenovanie
         for (int ep = 0; ep < epochCount; ep++) {
             data.shuffleRows();
-            double lambda = lambdaInitial * Math.pow(lambdaFinal / lambdaInitial, ep / epochCount);
+            double lambda = lambdaInitial * Math.pow(lambdaFinal / lambdaInitial, (double)ep / epochCount);
             double winnerAvgDist = 0.0;
             
             for (int i = 0; i < data.numRows(); i++) {
-                ArrayList<Double> x = new ArrayList<>(data.get(i));
-                x.remove(x.size() - 1); // aby sme nevyuzili pri trenovani prislusnost k triede
+                ArrayList<Double> x = new ArrayList<>();
+                for (int k = 0; k < dataDimensionsCount; k++) {
+                    x.add(data.get(i).get(k));
+                }
+                //System.out.println(x);
                 int winnerRow = 0;
                 int winnerCol = 0;
                 double winnerScore = 100000;
@@ -73,9 +96,8 @@ public class Proj3SOM {
                         for (int k = 0; k < dataDimensionsCount; k++) {
                            neuronCoordinates.add(weightMatrices.get(k).get(r).get(c));
                         }
-                       
                         double score = Helpers.vectorNorm(Helpers.vectorOperation(x, neuronCoordinates, '-'));
-                        System.out.println(score);
+                        //System.out.println(score);
                         if (score < winnerScore) {
                             winnerRow = r;
                             winnerCol = c;
@@ -84,8 +106,10 @@ public class Proj3SOM {
 
                     }
                 }
-                System.out.println(winnerRow + " " + winnerCol);
                 winnerAvgDist += winnerScore;
+                
+                //System.out.println(winnerRow + " " + winnerCol);
+                
                 // updatujeme vahy
                 ArrayList<Double> coordWinner = new ArrayList<>();
                 coordWinner.add(new Double(winnerRow));
@@ -100,11 +124,11 @@ public class Proj3SOM {
                             double oldWeight = weightMatrices.get(k).get(r).get(c);
                             double diff = x.get(k) - oldWeight;
                             double deltaW =  alpha * Helpers.gaussianNeighborhood(coordWinner, coordNeuron, lambda) * diff;
-                            
-                            weightMatrices.get(k).get(r).set(c, oldWeight + diff);
+                            weightMatrices.get(k).get(r).set(c, oldWeight + deltaW);
                         }
                     }
                 }
+                //System.out.println(weightMatrices);
             }
             winnerAvgDist /= data.numRows();
             System.out.println(winnerAvgDist);

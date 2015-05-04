@@ -58,10 +58,11 @@ public class Proj3SOM {
         int neuronCols = 20;
         int dataDimensionsCount = 4;
         
-        double alpha = 0.12;
+        double alphaInitial = 0.7;
+        double alphaFinal = 0.1;
         double lambdaInitial = 15;
         double lambdaFinal = 0.0000001;
-        int epochCount = 1000;
+        int epochCount = 350;
         
         // inicializujeme vahove matice
         ArrayList<Matrix> weightMatrices = new ArrayList<>();
@@ -76,6 +77,7 @@ public class Proj3SOM {
         // trenovanie
         for (int ep = 0; ep < epochCount; ep++) {
             data.shuffleRows();
+            double alpha = alphaInitial * Math.pow(alphaFinal / alphaInitial, (double)ep / epochCount);
             double lambda = lambdaInitial * Math.pow(lambdaFinal / lambdaInitial, (double)ep / epochCount);
             double winnerAvgDist = 0.0;
             
